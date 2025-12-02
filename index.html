@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AI Website Builder — Prototype</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Roboto,Arial;background:#0f172a;color:#e6eef8;margin:0;padding:24px}
+    .card{background:#071032;border-radius:12px;padding:18px;margin-bottom:12px;box-shadow:0 6px 20px rgba(2,6,23,.6)}
+    label{display:block;margin-top:10px;color:#9fb2d6;font-size:14px}
+    input,select{width:100%;padding:10px;margin-top:6px;border-radius:8px;border:1px solid #10203a;background:#07162a;color:#e6eef8}
+    button{margin-top:12px;padding:10px 14px;border-radius:8px;border:0;background:#60a5fa;color:#042a3b;font-weight:700;cursor:pointer}
+    .row{display:flex;gap:12px}
+    iframe{width:100%;height:520px;border-radius:8px;border:1px solid #10203a;margin-top:12px;background:white}
+    .muted{color:#6b8db4;font-size:13px;margin-top:6px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>AI Website Builder — Prototype</h1>
+    <p class="muted">Form sederhana untuk demonstrasi. Deploy ke Netlify agar fungsi serverless dapat dipanggil.</p>
+
+    <form id="genForm">
+      <label>Nama Bisnis<input id="name" value="Toko Saya" /></label>
+      <label>Industri
+        <select id="industry">
+          <option>UMKM</option>
+          <option>Jasa</option>
+          <option>Toko Online</option>
+          <option>Jasa Teknik</option>
+        </select>
+      </label>
+      <label>Warna Utama<input id="color" value="#f59e0b" /></label>
+      <div class="row">
+        <button id="generate" type="button">Generate</button>
+        <button id="download" type="button">Download Sample</button>
+      </div>
+    </form>
+
+    <div id="status" class="muted">Status: siap</div>
+    <div id="previewArea">
+      <h3 style="margin-top:16px">Preview</h3>
+      <iframe id="preview" src="sample_output.html"></iframe>
+    </div>
+  </div>
+
+  <script>
+    const generateBtn = document.getElementById('generate')
+    const downloadBtn = document.getElementById('download')
+    const status = document.getElementById('status')
+    const preview = document.getElementById('preview')
+
+    // Default function path for Netlify functions
+    const FUNCTION_PATH = '/.netlify/functions/generate'
+
+    generateBtn.addEventListener('click', async () => {
+      status.textContent = 'Status: generating...'
+      const name = document.getElementById('name').value
+      const industry = document.getElementById('industry').value
+      const color = document.getElementById('color').value
+
+      try {
+        const res = await fetch(FUNCTION_PATH, {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({name, industry, color})
+        })
+        if (!res.ok) throw new Error('Server error')
+        const html = await res.text()
+        // Show returned HTML in iframe
+        preview.srcdoc = html
+        status.textContent = 'Status: selesai — preview updated'
+      } catch(err) {
+        console.error(err)
+        status.textContent = 'Status: gagal — menggunakan sample lokal'
+        preview.src = 'sample_output.html'
+      }
+    })
+
+    downloadBtn.addEventListener('click', () => {
+      // Download sample_output.html
+      window.location.href = 'sample_output.html'
+    })
+  </script>
+</body>
+</html>
